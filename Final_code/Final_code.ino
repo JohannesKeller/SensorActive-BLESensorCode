@@ -69,17 +69,17 @@ void setup() {
   m5Server->setCallbacks(new MyServerCallbacks());
 
   // Erstellung des BLE-Services
-  BLEService *sensorService = m5Server->createService(SERVICE_UUID);
+  BLEService *pService = m5Server->createService(SERVICE_UUID);
 
   // Erstellung der beiden Characteristicen mit allen verfügbaren Properties
-  dataCharacteristic = sensorService->createCharacteristic(
+  dataCharacteristic = pService->createCharacteristic(
                          DATA_CHARACTERISTIC_UUID,
                          BLECharacteristic::PROPERTY_READ   |
                          BLECharacteristic::PROPERTY_WRITE  |
                          BLECharacteristic::PROPERTY_NOTIFY |
                          BLECharacteristic::PROPERTY_INDICATE
                        );
-  helpCharacteristic = sensorService->createCharacteristic(
+  helpCharacteristic = pService->createCharacteristic(
                          HELP_CHARACTERISTIC_UUID,
                          BLECharacteristic::PROPERTY_READ   |
                          BLECharacteristic::PROPERTY_WRITE  |
@@ -90,8 +90,10 @@ void setup() {
 
   helpCharacteristic->setValue("x");  // helpCharacteristic wird zu Beginn auf "x" gesetzt, damit sie nicht leer ist
 
+  dataCharacteristic->addDescriptor(new BLE2902());   // Erstellung des BLE-Descriptors
+
   // Start the service
-  sensorService->start();
+  pService->start();
 
   // Advertising wird gestartet
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -214,43 +216,41 @@ void update_values(void * pvParameters) {
     float cur_tem = sensor.readTemperature();
     float cur_bat = float(M5.Power.getBatteryLevel());
 
+    cur_hum = round(cur_hum);
+    cur_tem = round(cur_tem);
+    cur_bat = round(cur_bat);
+
     // Falls die Abfragen fehlerhaft waren, wird vorzeitig abgebrochen
-    if (!isnan(cur_hum) && !isnan(cur_tem)) {
-
-
-      cur_hum = round(cur_hum);
-      cur_tem = round(cur_tem);
-      cur_bat = round(cur_bat);
-
-
-      // Alle Messwerte, werden mit den zuletzt gemessenen Werten verglichen und nur gespeichert, wenn eine Differenz besteht
-      if (cur_hum < last_hum - 1 || cur_hum > last_hum + 1) {
-        last_hum = cur_hum;
-        String helper = String(millis(), DEC) + "," + "hum" + "," + String(cur_hum);
-        messwertArray2[messwertCounter2] = helper;
-        messwertArray1[messwertCounter1] = helper;
-        messwertCounter2++;
-        messwertCounter1++;
-      }
-
-      if (cur_tem != last_tem) {
-        last_tem = cur_tem;
-        String helper = String(millis(), DEC) + "," + "tem" + "," + String(cur_tem);
-        messwertArray2[messwertCounter2] = helper;
-        messwertArray1[messwertCounter1] = helper;
-        messwertCounter2++;
-        messwertCounter1++;
-      }
-
-      if (cur_bat != last_bat) {
-        last_bat = cur_bat;
-        String helper = String(millis(), DEC) + "," + "bat" + "," + String(cur_bat);
-        messwertArray2[messwertCounter2] = helper;
-        messwertArray1[messwertCounter1] = helper;
-        messwertCounter2++;
-        messwertCounter1++;
-      }
+    if (isnan(cur_hum) || isnan(cur_tem)) {
+      return;
     }
-    Serial.println (String(messwertCounter2) + " neue Werte");
+
+    // Alle Messwerte, werden mit den zuletzt gemessenen Werten verglichen und nur gespeichert, wenn eine Differenz besteht
+    if (cur_hum < last_hum - 1 || cur_hum > last_hum + 1) {
+      last_hum = cur_hum;
+      String helper = String(millis(), DEC) + "," + "hum" + "," + String(cur_hum);
+      messwertArray2[messwertCounter2] = helper;
+      messwertArray1[messwertCounter1] = helper;
+      messwertCounter2++;
+      messwertCounter1++;
+    }
+
+    if (cur_tem != last_tem) {
+      last_tem = cur_tem;
+      String helper = String(millis(), DEC) + "," + "tem" + "," + String(cur_tem);
+      messwertArray2[messwertCounter2] = helper;
+      messwertArray1[messwertCounter1] = helper;
+      messwertCounter2++;
+      messwertCounter1++;
+    }
+
+    if (cur_bat != last_bat) {
+      last_bat = cur_bat;
+      String helper = String(millis(), DEC) + "," + "bat" + "," + String(cur_bat);
+      messwertArray2[messwertCounter2] = helper;
+      messwertArray1[messwertCounter1] = helper;
+      messwertCounter2++;
+      messwertCounter1++;
+    }
   }
 }
