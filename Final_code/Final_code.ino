@@ -32,6 +32,9 @@
 //#define DHTTYPE DHT22 // DHT 22 (AM2302)
 //#define DHTTYPE DHT21 // DHT 21 (AM2301)
 
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+
 // Initialize DHT sensor for normal 16mhz Arduino
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -127,7 +130,7 @@ void setup() {
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
-  Serial.println("Waiting a client connection to notify...");
+  //Serial.println("Waiting a client connection to notify...");
 
   xTaskCreatePinnedToCore(
     update_values,     /* Function to implement the task */
@@ -140,6 +143,8 @@ void setup() {
 }
 
 void loop() {
+  
+  //Serial.println("Waiting a client connection to notify...");
   // notify changed value
   if (deviceConnected){
   std :: string rxValue = helpCharacteristic-> getValue ();
@@ -258,7 +263,7 @@ float last_bat = 0;
 float last_tem = 0;
 
 void loop_dht() {
-
+  printDeviceAddress();
   // Wait a few seconds between measurements.
 
   // Reading temperature or humidity takes about 250 milliseconds!
@@ -324,4 +329,27 @@ void loop_dht() {
   Serial.println(String(messungen_counter3) + " neue Messwerte");
 
 
+}
+
+void printDeviceAddress() {
+ 
+  const uint8_t* point = esp_bt_dev_get_address();
+  String address;
+  
+ 
+  for (int i = 0; i < 6; i++) {
+ 
+    char str[3];
+ 
+    sprintf(str, "%02X", (int)point[i]);
+    address += str;
+    //Serial.print(str);
+ 
+    if (i < 5){
+      address += ":";
+      //Serial.print(":");
+    }
+ 
+  }
+  Serial.println("b_address:("+address+"):end");
 }
