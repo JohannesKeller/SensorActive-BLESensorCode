@@ -47,6 +47,7 @@ bool oldDeviceConnected = false;
 uint32_t value = 0;
 char millies[20];
 bool all_data_sent = false;
+bool send_alive_measurement = true;
 
 
 
@@ -201,9 +202,11 @@ void loop() {
      messungen_counter1 = 0;
     copy_array_to_array(2,3);
   }
+  send_alive_measurement = true;
   Serial.println ("worked");
     deviceListening = false;
     all_data_sent = false;
+    
   }
   
   // disconnecting
@@ -323,6 +326,19 @@ void loop_dht() {
       messungen_counter3++;
       messungen_counter2++;
   
+    }
+
+    if (send_alive_measurement) {
+  
+      String helper = String(millis(), DEC) + "," + "helper" + "," + String(0);
+      
+      messungen3[messungen_counter3] = helper;
+      messungen2[messungen_counter2] = helper;
+      
+      messungen_counter3++;
+      messungen_counter2++;
+
+      send_alive_measurement = false;
     }
   //}
 
