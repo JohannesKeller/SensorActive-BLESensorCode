@@ -281,6 +281,19 @@ void loop_dht() {
   float cur_bat = float(M5.Power.getBatteryLevel());
   //float cur_bat = cur_bat_uint;
   cur_bat = round(cur_bat);
+
+  if (send_alive_measurement) {
+  
+    String helper = String(millis(), DEC) + "," + "helper" + "," + String(0);
+      
+    messungen3[messungen_counter3] = helper;
+    messungen2[messungen_counter2] = helper;
+      
+    messungen_counter3++;
+    messungen_counter2++;
+
+    send_alive_measurement = false;
+   }
   
 
   // Check if any reads failed and exit early (to try again).
@@ -328,18 +341,6 @@ void loop_dht() {
   
     }
 
-    if (send_alive_measurement) {
-  
-      String helper = String(millis(), DEC) + "," + "helper" + "," + String(0);
-      
-      messungen3[messungen_counter3] = helper;
-      messungen2[messungen_counter2] = helper;
-      
-      messungen_counter3++;
-      messungen_counter2++;
-
-      send_alive_measurement = false;
-    }
   //}
 
   Serial.println(String(messungen_counter3) + " neue Messwerte");
